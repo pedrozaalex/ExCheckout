@@ -1,0 +1,33 @@
+{
+  "products": [
+    {
+      "id": "VOUCHER",
+      "name": "Voucher",
+      "price": 5.0
+    },
+    {
+      "id": "TSHIRT",
+      "name": "T-Shirt",
+      "price": 20.0
+    },
+    {
+      "id": "MUG",
+      "name": "Coffee Mug",
+      "price": 7.5
+    }
+  ],
+  "discounts": {
+    "bulk": {
+      "TSHIRT": {
+        "min": 3,
+        "bulkPrice": 19.0
+      }
+    },
+    "buyXgetY": {
+      "VOUCHER": {
+        "buy": 2,
+        "get": 1
+      }
+    }
+  }
+}
