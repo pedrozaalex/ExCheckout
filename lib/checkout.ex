@@ -73,10 +73,9 @@ defmodule Checkout do
         if input |> has_multiple_numbers?() do
           input
           |> String.split(" ")
-          |> Enum.map(&String.to_integer(&1))
+          |> Enum.map(&Helpers.parse_int(&1))
         else
-          IO.puts("single code")
-          input |> String.first() |> String.to_integer()
+          input |> String.first() |> Helpers.parse_int()
         end
       rescue
         _ ->

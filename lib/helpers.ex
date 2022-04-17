@@ -21,4 +21,15 @@ defmodule Helpers do
       {String.to_atom(key), val}
     end
   end
+
+  @spec parse_int(String.t()) :: integer() | nil
+  def parse_int(str) do
+    case Integer.parse(str) do
+      {int, _remainder} ->
+        int
+
+      _ ->
+        nil
+    end
+  end
 end
