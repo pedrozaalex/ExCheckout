@@ -50,10 +50,6 @@ defmodule Checkout do
 
   @spec to_product_code_list([number()], [Product]) :: list
   def to_product_code_list(index_list, catalog) do
-    IO.puts("to_product_code_list: ")
-    IO.inspect(index_list)
-    IO.inspect(catalog)
-
     index_list
     |> Enum.map(&get_product_code_by_index(catalog, &1))
     |> Enum.filter(fn x -> x != %{} end)
@@ -74,11 +70,7 @@ defmodule Checkout do
       try do
         input = get_products_selection_prompt(catalog, cart) |> IO.gets() |> String.trim()
 
-        IO.inspect(input)
-
         if input |> has_multiple_numbers?() do
-          IO.puts("list of codes")
-
           input
           |> String.split(" ")
           |> Enum.map(&String.to_integer(&1))
