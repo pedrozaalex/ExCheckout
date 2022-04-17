@@ -18,7 +18,8 @@ defmodule Checkout do
       prompt_for_cart_products(products, [], :continue)
       |> calculate_total(products, bulks, buy_X_get_Y)
 
-    IO.puts("Total: #{total}€")
+    IO.puts("Total: #{total}€\n")
+    :ok
   end
 
   @spec get_products_selection_prompt({Product}, [String.t()]) :: String.t()
@@ -36,23 +37,35 @@ defmodule Checkout do
     |> apply_bulk_discounts(catalog, bulk_discounts)
   end
 
-  def get_product_by_index(catalog, index) do
+  def get_product_code_by_index(catalog, index) do
     try do
-      catalog |> elem(index - 1)
+      catalog
+      |> List.to_tuple()
+      |> elem(index - 1)
+      |> Map.get(:id)
     rescue
       _ -> %{}
     end
   end
 
+  @spec to_product_code_list([number()], [Product]) :: list
   def to_product_code_list(index_list, catalog) do
+    IO.puts("to_product_code_list: ")
+    IO.inspect(index_list)
+    IO.inspect(catalog)
+
     index_list
-    |> Enum.map(fn code ->
-      catalog
-      |> List.to_tuple()
-      |> get_product_by_index(code)
-      |> Map.get(:id)
-    end)
+    |> Enum.map(&get_product_code_by_index(catalog, &1))
     |> Enum.filter(fn x -> x != %{} end)
+  end
+
+  @doc """
+  Checks if a given input is a single code or a list of codes.
+
+  """
+  @spec has_multiple_numbers?(String.t()) :: boolean()
+  def has_multiple_numbers?(input) do
+    input =~ ~r/^(\d\s\d)+/
   end
 
   @spec prompt_for_cart_products([Product], [String.t()], :continue | :stop) :: any
@@ -61,11 +74,16 @@ defmodule Checkout do
       try do
         input = get_products_selection_prompt(catalog, cart) |> IO.gets() |> String.trim()
 
-        if input =~ ~r/^(\d ){2,}/ do
+        IO.inspect(input)
+
+        if input |> has_multiple_numbers?() do
+          IO.puts("list of codes")
+
           input
           |> String.split(" ")
           |> Enum.map(&String.to_integer(&1))
         else
+          IO.puts("single code")
           input |> String.first() |> String.to_integer()
         end
       rescue
@@ -73,39 +91,41 @@ defmodule Checkout do
           nil
       end
 
-    cond do
-      code_or_list == 0 ->
-        prompt_for_cart_products(catalog, cart, :stop)
+    {newCart, op} =
+      cond do
+        code_or_list == 0 ->
+          {cart, :stop}
 
-      is_list(code_or_list) ->
-        newItems =
-          code_or_list
-          |> Enum.filter(&(is_integer(&1) && 0 < &1 && &1 <= length(code_or_list)))
-          |> to_product_code_list(catalog)
+        is_list(code_or_list) ->
+          newItems =
+            code_or_list
+            |> Enum.filter(&(is_integer(&1) && 0 < &1 && &1 <= length(code_or_list)))
+            |> to_product_code_list(catalog)
 
-        prompt_for_cart_products(catalog, cart ++ newItems, :continue)
+          {cart ++ newItems, :continue}
 
-      true ->
-        try do
-          product = catalog |> List.to_tuple() |> elem(code_or_list - 1)
+        true ->
+          try do
+            product = catalog |> List.to_tuple() |> elem(code_or_list - 1)
 
-          if product === nil do
-            IO.puts("Product not found")
-            prompt_for_cart_products(catalog, cart, :continue)
-          else
-            prompt_for_cart_products(catalog, cart ++ [product.id], :continue)
+            {cart ++ [product.id], :continue}
+          rescue
+            _ ->
+              IO.puts("Invalid selection\n")
+              {cart, :continue}
           end
-        rescue
-          _ ->
-            IO.puts("Invalid selection")
-            prompt_for_cart_products(catalog, cart, :continue)
-        end
-    end
+      end
+
+    prompt_for_cart_products(catalog, newCart, op)
   end
 
-  # @spec prompt_for_cart_products({Product}, [String.t()], :stop) :: {Product}
   def prompt_for_cart_products(_, cart, :stop), do: cart
 
+  @doc """
+  Sums the quantity of all products in the cart.
+
+  """
+  @spec sum_cart_products_qty([String.t()]) :: %{required(String.t()) => String.t()}
   def sum_cart_products_qty(cart) do
     cart |> Enum.reduce(%{}, fn x, acc -> Map.update(acc, x, 1, &(&1 + 1)) end)
   end
