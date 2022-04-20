@@ -1,4 +1,10 @@
 defmodule Product do
+  @type t :: %__MODULE__{
+          id: String.t(),
+          name: String.t(),
+          price: float
+        }
+
   defstruct id: "", name: "", price: 0.0
 
   def get_all_from_config() do

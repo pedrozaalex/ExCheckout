@@ -28,6 +28,16 @@
         "buy": 2,
         "get": 1
       }
-    }
+    },
+    "combo": [
+      {
+        "name": "MUG+TSHIRT",
+        "items": {
+          "TSHIRT": 2,
+          "MUG": 1
+        },
+        "price": 10
+      }
+    ]
   }
 }
